@@ -2,17 +2,30 @@
 import scrapy
 import re
 
-from fangtx.items import NewHouseItem,FtxItem
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
+
+from unionSpider.items import UnionItem
 
 class FangSpider(scrapy.Spider):
-    name = 'fang'
+    name = 'ftx'
     allowed_domains = ['fang.com']
     start_urls = ['https://cd.esf.fang.com/']
+
+    rules = {
+        # 房产详情链接
+        Rule(LinkExtractor(
+            restrict_xpaths="//div[contains(@class,'shop_list')]/dl//h4[@class='clearfix']/a"),
+            follow=True, callback="process_item"),
+        # 翻页链接
+        Rule(LinkExtractor(
+            restrict_xpaths="//div[@class='page_al']/p/a"), follow=True),
+    }
 
     def parse(self,response):
         dls = response.xpath("//div[contains(@class,'shop_list')]/dl")
         for dl in dls:
-            item = FtxItem()
+            item = UnionItem()
             name = dl.xpath(".//h4[@class='clearfix']/a/span/text()").get()
             infos = dl.xpath(".//p[@class='tel_shop']/text()").getall()
             infos = list(map(lambda x:re.sub(r'\s','',x),infos))
