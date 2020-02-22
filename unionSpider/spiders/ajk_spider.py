@@ -36,8 +36,8 @@ class AjkSpiderSpider(scrapy.Spider):
         num = len(response.xpath(
             '//*[@id="houselist-mod-new"]/li').extract())
 
-        # for i in range(1, num + 1):
-        for i in range(1, 2):
+        for i in range(1, num + 1):
+        # for i in range(1, 2):
             url = response.xpath(
                 '//*[@id="houselist-mod-new"]/li[{}]/div[2]/div[1]/a/@href'
                     .format(i)).extract()[0]
