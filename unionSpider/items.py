@@ -9,11 +9,8 @@ import scrapy
 
 
 class UnionItem(scrapy.Item):
-    # 标题
     title = scrapy.Field()
-    # 价格
     price = scrapy.Field()
-    # 单价
     unit_price = scrapy.Field()
     # 小区名字
     community_name = scrapy.Field()
@@ -35,9 +32,6 @@ class UnionItem(scrapy.Item):
     purposes = scrapy.Field()
     # 挂牌时间 建造年代
     release_date = scrapy.Field()
-    # 房屋照片
     image_urls = scrapy.Field()
-    # 房产链接
     from_url = scrapy.Field()
-    # 建筑结构
     house_structure = scrapy.Field()

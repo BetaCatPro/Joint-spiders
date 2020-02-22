@@ -9,7 +9,7 @@ from scrapy.spiders import CrawlSpider, Rule
 
 class HomeSpider(CrawlSpider):
     name = 'lianjia'
-    allowed_domains = ['lianjia.com']
+    allowed_domains = ['cd.lianjia.com']
     start_urls = ['https://cd.lianjia.com/ershoufang/']
 
     rules = {

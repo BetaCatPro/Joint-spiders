@@ -7,20 +7,10 @@
 
 
 import re
-from scrapy.exceptions import DropItem
 import csv
 
 
-class LianjiaFilterPipeline(object):
-
-    def process_item(self, item, spider):
-        item['area'] = re.findall(r"\d+\.?\d*", item["area"])[0]
-        if item["direction"] == '暂无数据':
-            raise DropItem("房屋朝向无数据，抛弃此项目：%s" % item)
-        return item
-
-
-class LianjiaCSVPipeline(object):
+class CSVPipeline(object):
     index = 0
     file = None
 
@@ -29,12 +19,14 @@ class LianjiaCSVPipeline(object):
 
     def process_item(self, item, spider):
         if self.index == 0:
-            column_name = "name,room_type,area,direction,fitment,elevator,total_price,unit_price,property_right\n"
+            column_name = "title,price,unit_price,community_name,region,type,construction_area,orientation,decoration,floor,elevator,purposes,release_date,house_structure,image_urls,from_url\n"
             self.file.write(column_name)
             self.index = 1
         self.writer = csv.writer(self.file)
-        self.writer.writerow((item['name'], item['room_type'], item['area'], item['direction'], item[
-                             'fitment'], item['elevator'], item['total_price'], item['unit_price'], item['property_right']))
+        self.writer.writerow((item['title'], item['price'], item['unit_price'], item['community_name'],
+                                        item['region'], item['type'], item['construction_area'], item['orientation'],
+                                        item['decoration'],item['floor'],item['elevator'],item['purposes'],item['release_date'],
+                                        item['house_structure'],item['image_urls'],item['from_url']))
         return item
 
     def close_spider(self, spider):

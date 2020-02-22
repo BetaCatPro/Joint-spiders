@@ -27,7 +27,7 @@ ROBOTSTXT_OBEY = False
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 5
+DOWNLOAD_DELAY = 10
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -54,7 +54,7 @@ DEFAULT_REQUEST_HEADERS = {
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
    'unionSpider.middlewares.UserAgentDownLoadMildeware': 543,
-   'unionSpider.middlewares.ProxyMiddleWare':520
+   # 'unionSpider.middlewares.ProxyMiddleWare':520
    # 'unionSpider.middlewares.IPPOOlS': 542
 }
 
@@ -67,10 +67,7 @@ DOWNLOADER_MIDDLEWARES = {
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   # 'unionSpider.pipelines.LianjiaFilterPipeline': 100,
-   # 'unionSpider.pipelines.LianjiaCSVPipeline': 200,
-   # 'unionSpider.pipelines.AjkPipeline': 300,
-   # 'unionSpider.pipelines.FangtxPipeline': 400,
+   # 'unionSpider.pipelines.CSVPipeline': 100,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
