@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
 import re
+import requests
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
@@ -14,13 +15,13 @@ class FangSpider(scrapy.Spider):
 
     def parse(self, response):
         next_url = response.urljoin(response.xpath("//div[@class='page_al']/p/a/@href").extract_first())
-        print('*********' + str(next_url) + '**********')
+        # print('*********' + str(next_url) + '**********')
         # if next_url:
         #     yield scrapy.Request(url=next_url,callback=self.parse)
 
         dls = response.xpath("//div[contains(@class,'shop_list')]/dl")[:1]
         for dl in dls:
-            url = response.urljoin(dl.xpath(".//h4[@class='clearfix']/a/@href").extract_first())
+            url = self.get_rel_url(response, dl)
             yield scrapy.Request(url, callback=self.parse_detail)
 
     def parse_detail(self,response):
@@ -70,3 +71,18 @@ class FangSpider(scrapy.Spider):
         item['house_structure'] = response.css(
             'div.w1200.clearfix > div.zf_new_left.floatl > div.content-item.fydes-item > div.cont.clearfix > div:nth-child(6) > span.rcont::text').extract_first()
         yield item
+
+    def get_rel_url(self,response,dl):
+
+        ps_id = response.css("#kesfqbfylb_A01_01_03 > dd:nth-child(2) > h4 > a::attr(ps)").extract_first()
+        data_channel = response.css(
+            "#kesfqbfylb_A01_01_03 > dd:nth-child(2) > h4 > a::attr(data_channel)").extract_first()
+        url = response.urljoin(dl.css("#kesfqbfylb_A01_01_03 > dd:nth-child(2) > h4 > a::attr(href)").extract_first())
+        html = requests.get(url).text
+
+        url = url + '?channel=' + data_channel + '&psid=' + ps_id
+        print(url)
+
+        real_url = url + '?' + re.findall(r't3=\'(.*?)\'', html)[0]
+        print(real_url)
+        return real_url

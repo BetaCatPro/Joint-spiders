@@ -59,8 +59,9 @@ class AjkSpiderSpider(scrapy.Spider):
         type = response.css(
             '#content > div.wrapper > div.wrapper-lf > div.houseInfoBox > div > div.houseInfo-wrap > ul > li:nth-child(2) > div.houseInfo-content::text').extract_first()
         item['type'] = re.sub(r'\n|\t','',type)
-        item['construction_area'] = response.css(
+        construction_area = response.css(
             '#content > div.wrapper > div.wrapper-lf > div.houseInfoBox > div > div.houseInfo-wrap > ul > li:nth-child(5) > div.houseInfo-content::text').extract_first()
+        item['construction_area'] = construction_area.replace('平方米','㎡')
         item['orientation'] = response.css(
             '#content > div.wrapper > div.wrapper-lf > div.houseInfoBox > div > div.houseInfo-wrap > ul > li:nth-child(8) > div.houseInfo-content::text').extract_first()
         item['decoration'] = response.css(
