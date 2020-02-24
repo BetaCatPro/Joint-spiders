@@ -3,13 +3,15 @@ import re
 
 import scrapy
 from unionSpider.items import UnionItem
+from scrapy_redis.spiders import RedisSpider
 
+# class BkSpiderSpider(RedisSpider):
 class BkSpiderSpider(scrapy.Spider):
     name = 'bk'
     allowed_domains = ['ke.com']
     start_urls = ['https://cd.ke.com/ershoufang/']
-    urls = []
-
+    # redis_key = 'bk:start_urls'
+    # lpush bk:start_urls 'https://cd.ke.com/ershoufang/'
     def parse(self, response):
         # 获取该城市二手房界面的首页链接
         index = response.xpath(
@@ -46,13 +48,34 @@ class BkSpiderSpider(scrapy.Spider):
             '#introduction > div > div > div.base > div.content > ul > li:nth-child(1)::text').extract_first()
         item['construction_area'] = response.css(
             '#introduction > div > div > div.base > div.content > ul > li:nth-child(3)::text').extract_first()
-        item['orientation'] = response.css(
-            '#introduction > div > div > div.base > div.content > ul > li:nth-child(7)::text').extract_first()
-        item['decoration'] = response.css(
-            '#introduction > div > div > div.base > div.content > ul > li:nth-child(9)::text').extract_first()
+        # error
+        if response.css('#introduction > div > div > div.base > div.content > ul > li:nth-child(5) > span::text').extract_first() == '套内面积':
+            item['orientation'] = response.css(
+                '#introduction > div > div > div.base > div.content > ul > li:nth-child(7)::text').extract_first()
+            item['decoration'] = response.css(
+                '#introduction > div > div > div.base > div.content > ul > li:nth-child(9)::text').extract_first()
+            item['house_structure'] = response.css(
+                '#introduction > div > div > div.base > div.content > ul > li:nth-child(8)::text').extract_first()
+        else:
+            item['orientation'] = response.css(
+                '#introduction > div > div > div.base > div.content > ul > li:nth-child(6)::text').extract_first()
+            item['decoration'] = response.css(
+                '#introduction > div > div > div.base > div.content > ul > li:nth-child(8)::text').extract_first()
+            item['house_structure'] = response.css(
+                '#introduction > div > div > div.base > div.content > ul > li:nth-child(7)::text').extract_first()
         item['floor'] = response.css(
             '#introduction > div > div > div.base > div.content > ul > li:nth-child(2)::text').extract_first()
-        item['elevator'] = None
+        #error
+        el1 = response.css('introduction > div > div > div.base > div.content > ul > li:nth-child(11) > span::text').extract_first()
+        el2 = response.css('introduction > div > div > div.base > div.content > ul > li:nth-child(10) > span::text').extract_first()
+        if el1=='配备电梯':
+            item['elevator'] = response.css(
+            'introduction > div > div > div.base > div.content > ul > li:nth-child(11)::text').extract_first()
+        elif el2=='配备电梯':
+            item['elevator'] = response.css(
+                'introduction > div > div > div.base > div.content > ul > li:nth-child(10)::text').extract_first()
+        else:
+            item['elevator'] = None
         purposes = response.css(
             '#introduction > div > div > div.transaction > div.content > ul > li:nth-child(4)::text').extract_first()
         item['purposes'] = re.sub(r'\n','',purposes)
@@ -62,7 +85,5 @@ class BkSpiderSpider(scrapy.Spider):
         item['image_urls'] = response.css(
             '#thumbnail2 > ul > li > img::attr(src)').extract()
         item['from_url'] = response.url
-        item['house_structure'] = response.css(
-            '#introduction > div > div > div.base > div.content > ul > li:nth-child(8)::text').extract_first()
         yield item
 

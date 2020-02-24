@@ -67,7 +67,7 @@ DOWNLOADER_MIDDLEWARES = {
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   # 'unionSpider.pipelines.CSVPipeline': 100,
+   'unionSpider.pipelines.CSVPipeline': 100,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
