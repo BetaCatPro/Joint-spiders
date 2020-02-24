@@ -95,10 +95,10 @@ ITEM_PIPELINES = {
 # COMMANDS_MODULE = "unionSpider.commands"
 
 # 配置scrapy_redis
-# DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"  #定义一个去重的类，用来将url去重
-# SCHEDULER = "scrapy_redis.scheduler.Scheduler"   #指定队列
-# SCHEDULER_PERSIST = True  #将程序持久化保存
-# REDIS_URL = "redis://127.0.0.1:6379"
+DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"  #定义一个去重的类，用来将url去重
+SCHEDULER = "scrapy_redis.scheduler.Scheduler"   #指定队列
+SCHEDULER_PERSIST = True  #将程序持久化保存
+REDIS_URL = "redis://127.0.0.1:6379"
 
 USER_AGENT_LIST = [
     "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1",

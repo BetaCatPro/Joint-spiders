@@ -5,12 +5,12 @@ import scrapy
 from unionSpider.items import UnionItem
 from scrapy_redis.spiders import RedisSpider
 
-# class BkSpiderSpider(RedisSpider):
-class BkSpiderSpider(scrapy.Spider):
+class BkSpiderSpider(RedisSpider):
+# class BkSpiderSpider(scrapy.Spider):
     name = 'bk'
     allowed_domains = ['ke.com']
-    start_urls = ['https://cd.ke.com/ershoufang/']
-    # redis_key = 'bk:start_urls'
+    # start_urls = ['https://cd.ke.com/ershoufang/']
+    redis_key = 'bk:start_urls'
     # lpush bk:start_urls 'https://cd.ke.com/ershoufang/'
     def parse(self, response):
         # 获取该城市二手房界面的首页链接
@@ -21,17 +21,25 @@ class BkSpiderSpider(scrapy.Spider):
         for href in hrefs:
             # 构造该城市各区县二手房信息列表的链接
             url = '%s%s/' % (index, href)
-            yield scrapy.Request(url, callback=self.parse_url, dont_filter=True)
-            break
+            yield scrapy.Request(url, callback=self.parse_url,meta={'url':url} , dont_filter=True)
 
     def parse_url(self, response):
         # 分页爬取
         num = response.xpath('//*[@id="beike"]/div[1]/div[4]/div[1]/div[2]/div[1]/h2/span/text()').get()
         num = int(num)
         for i in range(num + 1):
-            for info in response.xpath("//*[@class='info clear']"):
-                item_url = info.xpath("./div[1]/a/@href").extract()[0]
-                yield scrapy.Request(item_url, callback=self.parse_detail, dont_filter=True)
+        # for i in range(1):
+            self.parse_item(response, num)
+
+
+    def parse_item(self,response, num):
+        # i默认从0开始，spider从第1页开始爬取
+        next_url = response.meta.get('url') + 'pg' + str(num + 2)
+        for info in response.xpath("//*[@class='info clear']"):
+            item_url = info.xpath("./div[1]/a/@href").extract()[0]
+            yield scrapy.Request(item_url, callback=self.parse_detail, dont_filter=True)
+        yield scrapy.Request(next_url, callback=self.parse_item)
+
 
     def parse_detail(self,response):
         item = UnionItem()
@@ -66,22 +74,24 @@ class BkSpiderSpider(scrapy.Spider):
         item['floor'] = response.css(
             '#introduction > div > div > div.base > div.content > ul > li:nth-child(2)::text').extract_first()
         #error
-        el1 = response.css('introduction > div > div > div.base > div.content > ul > li:nth-child(11) > span::text').extract_first()
-        el2 = response.css('introduction > div > div > div.base > div.content > ul > li:nth-child(10) > span::text').extract_first()
+        el1 = response.css('#introduction > div > div > div.base > div.content > ul > li:nth-child(11) > span::text').extract_first()
+        el2 = response.css('#introduction > div > div > div.base > div.content > ul > li:nth-child(10) > span::text').extract_first()
         if el1=='配备电梯':
             item['elevator'] = response.css(
-            'introduction > div > div > div.base > div.content > ul > li:nth-child(11)::text').extract_first()
+            '#introduction > div > div > div.base > div.content > ul > li:nth-child(11)::text').extract_first()
         elif el2=='配备电梯':
             item['elevator'] = response.css(
-                'introduction > div > div > div.base > div.content > ul > li:nth-child(10)::text').extract_first()
+                '#introduction > div > div > div.base > div.content > ul > li:nth-child(10)::text').extract_first()
         else:
-            item['elevator'] = None
+            item['elevator'] = '无'
         purposes = response.css(
             '#introduction > div > div > div.transaction > div.content > ul > li:nth-child(4)::text').extract_first()
-        item['purposes'] = re.sub(r'\n','',purposes)
+        purposes = re.sub(r'\n','',purposes)
+        item['purposes'] = purposes.strip()
         release_date = response.css(
             '#introduction > div > div > div.transaction > div.content > ul > li:nth-child(1)::text').extract_first()
-        item['release_date'] = re.sub(r'\n','',release_date)
+        release_date = re.sub(r'\n','',release_date)
+        item['release_date'] = release_date.strip()
         item['image_urls'] = response.css(
             '#thumbnail2 > ul > li > img::attr(src)').extract()
         item['from_url'] = response.url

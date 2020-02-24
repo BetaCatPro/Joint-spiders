@@ -20,21 +20,8 @@ class UserAgentDownLoadMildeware(object):
         return middleware
 
     def process_request(self, request, spider):
+        print('this is request user_agent' + random.choice(self.user_agent))
         request.headers['user-agent'] = random.choice(self.user_agent)
-
-from .settings import IPPOOL
-from scrapy import signals
-
-# 这里的代理大多数不能用辣
-class MyproxiesSpiderMiddleware(object):
-
-    def __init__(self, ip=''):
-        self.ip = ip
-
-    def process_request(self, request, spider):
-        thisip = random.choice(IPPOOL)
-        print("this is ip:" + thisip["ipaddr"])
-        request.meta["proxy"] = "http://" + thisip["ipaddr"]
 
 
 from scrapy import log
@@ -66,7 +53,8 @@ class ProxyMiddleWare(object):
     def get_random_proxy(self):
         '''随机从文件中读取proxy'''
         while 1:
-            with open('./utils/proxies.txt', 'r') as f:
+            # with open('./utils/proxies.txt', 'r') as f:
+            with open('./utils/peo.txt', 'r') as f:
                 proxies = f.readlines()
             if proxies:
                 break
