@@ -91,6 +91,7 @@ ITEM_PIPELINES = {
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
+
 # 运行多个爬虫
 # COMMANDS_MODULE = "unionSpider.commands"
 
@@ -99,6 +100,13 @@ DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"  #定义一个去重�
 SCHEDULER = "scrapy_redis.scheduler.Scheduler"   #指定队列
 SCHEDULER_PERSIST = True  #将程序持久化保存
 REDIS_URL = "redis://127.0.0.1:6379"
+
+# 去重类，要使用Bloom Filter请替换DUPEFILTER_CLASS
+# DUPEFILTER_CLASS = "scrapy_redis_bloomfilter.dupefilter.RFPDupeFilter"
+# 散列函数的个数，默认为6，可以自行修改
+# BLOOMFILTER_HASH_NUMBER = 6
+# # Bloom Filter的bit参数，默认30，占用128MB空间，去重量级1亿
+# BLOOMFILTER_BIT = 30
 
 USER_AGENT_LIST = [
     "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1",

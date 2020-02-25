@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import math
 
 import scrapy
 from unionSpider.items import UnionItem
@@ -17,28 +18,56 @@ class BkSpiderSpider(RedisSpider):
         index = response.xpath(
             "//*[@id='beike']/div[1]/div[1]/div/ul/li[2]/a/@href").extract()[0].replace('/ershoufang/', '')
         # 获取该城市各区县二手房界面的首页链接
-        hrefs = response.xpath("//*[@class=' CLICKDATA']/@href").extract()
-        for href in hrefs:
-            # 构造该城市各区县二手房信息列表的链接
-            url = '%s%s/' % (index, href)
-            yield scrapy.Request(url, callback=self.parse_url,meta={'url':url} , dont_filter=True)
+        # hrefs = response.xpath("//*[@class=' CLICKDATA']/@href").extract()
+        # for href in hrefs:
+        #     # 构造该城市各区县二手房信息列表的链接
+        #     url = '%s%s' % (index, href)
+        #     yield scrapy.Request(url, callback=self.parse_url,meta={'url':url}, dont_filter=True)
+        # url = 'https://cd.ke.com/ershoufang/jinjiang/' finished
+        # url = 'https://cd.ke.com/ershoufang/qingyang/'
+        # url = 'https://cd.ke.com/ershoufang/wuhou/'
+        # url = 'https://cd.ke.com/ershoufang/gaoxin7/'
+        # url = 'https://cd.ke.com/ershoufang/chenghua/'
+        # url = 'https://cd.ke.com/ershoufang/jinniu/'
+        # url = 'https://cd.ke.com/ershoufang/tianfuxinqu/'
+        # url = 'https://cd.ke.com/ershoufang/gaoxinxi1/'
+        # url = 'https://cd.ke.com/ershoufang/shuangliu/'
+        # url = 'https://cd.ke.com/ershoufang/wenjiang/'
+        # url = 'https://cd.ke.com/ershoufang/pidu/'
+        # url = 'https://cd.ke.com/ershoufang/longquanyi/'
+        # url = 'https://cd.ke.com/ershoufang/xindu/'
+        # url = 'https://cd.ke.com/ershoufang/tianfuxinqunanqu/'
+        # url = 'https://cd.ke.com/ershoufang/qingbaijiang/'
+        # url = 'https://cd.ke.com/ershoufang/dujiangyan/'
+        # url = 'https://cd.ke.com/ershoufang/pengzhou/'
+        # url = 'https://cd.ke.com/ershoufang/jianyang/'
+        # url = 'https://cd.ke.com/ershoufang/chongzhou1/'
+        # url = 'https://cd.ke.com/ershoufang/dayi/'
+        url = 'https://cd.ke.com/ershoufang/jintang/'
+        # url = 'https://cd.ke.com/ershoufang/pujiang/' fininshed
+        # url = 'https://cd.ke.com/ershoufang/qionglai/' fininshed
+        yield scrapy.Request(url, callback=self.parse_url,meta={'url':url})
 
     def parse_url(self, response):
         # 分页爬取
         num = response.xpath('//*[@id="beike"]/div[1]/div[4]/div[1]/div[2]/div[1]/h2/span/text()').get()
         num = int(num)
-        for i in range(num + 1):
-        # for i in range(1):
-            self.parse_item(response, num)
+        print(num)
+        page_num = 100 if math.ceil(num / 30) > 100 else math.ceil(num / 30)
+        print('*'*20)
+        print(page_num)
+        print('*'*20)
+        for i in range(page_num):
+            url = response.meta.get('url')
+            url = url + 'pg' + str(i + 1)
+            yield scrapy.Request(url, callback=self.parse_item,dont_filter=False)
 
 
-    def parse_item(self,response, num):
-        # i默认从0开始，spider从第1页开始爬取
-        next_url = response.meta.get('url') + 'pg' + str(num + 2)
+    def parse_item(self,response):
         for info in response.xpath("//*[@class='info clear']"):
             item_url = info.xpath("./div[1]/a/@href").extract()[0]
-            yield scrapy.Request(item_url, callback=self.parse_detail, dont_filter=True)
-        yield scrapy.Request(next_url, callback=self.parse_item)
+            if item_url:
+                yield scrapy.Request(item_url, callback=self.parse_detail, dont_filter=False)
 
 
     def parse_detail(self,response):
