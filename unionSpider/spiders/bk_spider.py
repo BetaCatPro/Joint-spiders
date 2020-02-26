@@ -39,11 +39,12 @@ class BkSpiderSpider(RedisSpider):
         # url = 'https://cd.ke.com/ershoufang/tianfuxinqunanqu/'
         # url = 'https://cd.ke.com/ershoufang/qingbaijiang/'
         # url = 'https://cd.ke.com/ershoufang/dujiangyan/'
-        # url = 'https://cd.ke.com/ershoufang/pengzhou/'
         # url = 'https://cd.ke.com/ershoufang/jianyang/'
-        # url = 'https://cd.ke.com/ershoufang/chongzhou1/'
-        # url = 'https://cd.ke.com/ershoufang/dayi/'
-        url = 'https://cd.ke.com/ershoufang/jintang/'
+        url = 'https://cd.ke.com/ershoufang/pengzhou/'
+        # url = 'https://cd.ke.com/ershoufang/xinjin/' finished
+        # url = 'https://cd.ke.com/ershoufang/chongzhou1/' finished
+        # url = 'https://cd.ke.com/ershoufang/dayi/' finished
+        # url = 'https://cd.ke.com/ershoufang/jintang/' finished
         # url = 'https://cd.ke.com/ershoufang/pujiang/' fininshed
         # url = 'https://cd.ke.com/ershoufang/qionglai/' fininshed
         yield scrapy.Request(url, callback=self.parse_url,meta={'url':url})
@@ -52,10 +53,10 @@ class BkSpiderSpider(RedisSpider):
         # 分页爬取
         num = response.xpath('//*[@id="beike"]/div[1]/div[4]/div[1]/div[2]/div[1]/h2/span/text()').get()
         num = int(num)
-        print(num)
+        print('房源数',num)
         page_num = 100 if math.ceil(num / 30) > 100 else math.ceil(num / 30)
         print('*'*20)
-        print(page_num)
+        print('总页数',page_num)
         print('*'*20)
         for i in range(page_num):
             url = response.meta.get('url')
@@ -86,20 +87,42 @@ class BkSpiderSpider(RedisSpider):
         item['construction_area'] = response.css(
             '#introduction > div > div > div.base > div.content > ul > li:nth-child(3)::text').extract_first()
         # error
-        if response.css('#introduction > div > div > div.base > div.content > ul > li:nth-child(5) > span::text').extract_first() == '套内面积':
+        is_inline = False
+        is_con_type = False
+        # 套内面积
+        inline_area = response.css('#introduction > div > div > div.base > div.content > ul > li:nth-child(5) > span::text').extract_first()
+        # 建筑类型
+        if inline_area == '套内面积':
+            is_inline = True
+            if response.css('#introduction > div > div > div.base > div.content > ul > li:nth-child(6) > span::text').extract_first() == '建筑类型':
+                is_con_type = True
+            else:
+                is_con_type = False
+        elif inline_area == '建筑类型':
+            is_con_type = True
+
+        if is_inline==False and is_con_type==False:
+            item['orientation'] = response.css(
+                '#introduction > div > div > div.base > div.content > ul > li:nth-child(5)::text').extract_first()
+            item['house_structure'] = response.css(
+                '#introduction > div > div > div.base > div.content > ul > li:nth-child(6)::text').extract_first()
+            item['decoration'] = response.css(
+                '#introduction > div > div > div.base > div.content > ul > li:nth-child(7)::text').extract_first()
+        elif is_inline and is_con_type:
             item['orientation'] = response.css(
                 '#introduction > div > div > div.base > div.content > ul > li:nth-child(7)::text').extract_first()
-            item['decoration'] = response.css(
-                '#introduction > div > div > div.base > div.content > ul > li:nth-child(9)::text').extract_first()
             item['house_structure'] = response.css(
                 '#introduction > div > div > div.base > div.content > ul > li:nth-child(8)::text').extract_first()
+            item['decoration'] = response.css(
+                '#introduction > div > div > div.base > div.content > ul > li:nth-child(9)::text').extract_first()
         else:
             item['orientation'] = response.css(
                 '#introduction > div > div > div.base > div.content > ul > li:nth-child(6)::text').extract_first()
-            item['decoration'] = response.css(
-                '#introduction > div > div > div.base > div.content > ul > li:nth-child(8)::text').extract_first()
             item['house_structure'] = response.css(
                 '#introduction > div > div > div.base > div.content > ul > li:nth-child(7)::text').extract_first()
+            item['decoration'] = response.css(
+                '#introduction > div > div > div.base > div.content > ul > li:nth-child(8)::text').extract_first()
+
         item['floor'] = response.css(
             '#introduction > div > div > div.base > div.content > ul > li:nth-child(2)::text').extract_first()
         #error
