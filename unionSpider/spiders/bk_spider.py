@@ -38,9 +38,9 @@ class BkSpiderSpider(RedisSpider):
         # url = 'https://cd.ke.com/ershoufang/xindu/'
         # url = 'https://cd.ke.com/ershoufang/tianfuxinqunanqu/'
         # url = 'https://cd.ke.com/ershoufang/qingbaijiang/'
-        # url = 'https://cd.ke.com/ershoufang/dujiangyan/'
-        # url = 'https://cd.ke.com/ershoufang/jianyang/'
-        url = 'https://cd.ke.com/ershoufang/pengzhou/'
+        url = 'https://cd.ke.com/ershoufang/dujiangyan/'
+        # url = 'https://cd.ke.com/ershoufang/jianyang/' finished
+        # url = 'https://cd.ke.com/ershoufang/pengzhou/' finished
         # url = 'https://cd.ke.com/ershoufang/xinjin/' finished
         # url = 'https://cd.ke.com/ershoufang/chongzhou1/' finished
         # url = 'https://cd.ke.com/ershoufang/dayi/' finished
@@ -86,6 +86,10 @@ class BkSpiderSpider(RedisSpider):
             '#introduction > div > div > div.base > div.content > ul > li:nth-child(1)::text').extract_first()
         item['construction_area'] = response.css(
             '#introduction > div > div > div.base > div.content > ul > li:nth-child(3)::text').extract_first()
+        purposes = response.css(
+            '#introduction > div > div > div.transaction > div.content > ul > li:nth-child(4)::text').extract_first()
+        purposes = re.sub(r'\n', '', purposes)
+        item['purposes'] = purposes.strip()
         # error
         is_inline = False
         is_con_type = False
@@ -115,6 +119,13 @@ class BkSpiderSpider(RedisSpider):
                 '#introduction > div > div > div.base > div.content > ul > li:nth-child(8)::text').extract_first()
             item['decoration'] = response.css(
                 '#introduction > div > div > div.base > div.content > ul > li:nth-child(9)::text').extract_first()
+        elif purposes.strip() == '别墅':
+            item['orientation'] = response.css(
+                '#introduction > div > div > div.base > div.content > ul > li:nth-child(4)::text').extract_first()
+            item['house_structure'] = response.css(
+                '#introduction > div > div > div.base > div.content > ul > li:nth-child(5)::text').extract_first()
+            item['decoration'] = response.css(
+                '#introduction > div > div > div.base > div.content > ul > li:nth-child(6)::text').extract_first()
         else:
             item['orientation'] = response.css(
                 '#introduction > div > div > div.base > div.content > ul > li:nth-child(6)::text').extract_first()
@@ -136,10 +147,6 @@ class BkSpiderSpider(RedisSpider):
                 '#introduction > div > div > div.base > div.content > ul > li:nth-child(10)::text').extract_first()
         else:
             item['elevator'] = '无'
-        purposes = response.css(
-            '#introduction > div > div > div.transaction > div.content > ul > li:nth-child(4)::text').extract_first()
-        purposes = re.sub(r'\n','',purposes)
-        item['purposes'] = purposes.strip()
         release_date = response.css(
             '#introduction > div > div > div.transaction > div.content > ul > li:nth-child(1)::text').extract_first()
         release_date = re.sub(r'\n','',release_date)
