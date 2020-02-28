@@ -15,7 +15,7 @@ class CSVPipeline(object):
     file = None
 
     def open_spider(self, spider):
-        self.file = open("dujiangyan_house.csv", "a" ,newline='')
+        self.file = open("E:\毕设\DataAnalysis\data\qingbaijiang_house.csv", "a" ,newline='')
 
     def process_item(self, item, spider):
         if self.index == 0:

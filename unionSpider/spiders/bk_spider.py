@@ -37,8 +37,8 @@ class BkSpiderSpider(RedisSpider):
         # url = 'https://cd.ke.com/ershoufang/longquanyi/'
         # url = 'https://cd.ke.com/ershoufang/xindu/'
         # url = 'https://cd.ke.com/ershoufang/tianfuxinqunanqu/'
-        # url = 'https://cd.ke.com/ershoufang/qingbaijiang/'
-        url = 'https://cd.ke.com/ershoufang/dujiangyan/'
+        url = 'https://cd.ke.com/ershoufang/qingbaijiang/'
+        # url = 'https://cd.ke.com/ershoufang/dujiangyan/' finished
         # url = 'https://cd.ke.com/ershoufang/jianyang/' finished
         # url = 'https://cd.ke.com/ershoufang/pengzhou/' finished
         # url = 'https://cd.ke.com/ershoufang/xinjin/' finished
@@ -88,7 +88,7 @@ class BkSpiderSpider(RedisSpider):
             '#introduction > div > div > div.base > div.content > ul > li:nth-child(3)::text').extract_first()
         purposes = response.css(
             '#introduction > div > div > div.transaction > div.content > ul > li:nth-child(4)::text').extract_first()
-        purposes = re.sub(r'\n', '', purposes)
+        purposes = re.sub(r'\n', '', purposes).strip()
         item['purposes'] = purposes.strip()
         # error
         is_inline = False
@@ -106,12 +106,20 @@ class BkSpiderSpider(RedisSpider):
             is_con_type = True
 
         if is_inline==False and is_con_type==False:
-            item['orientation'] = response.css(
-                '#introduction > div > div > div.base > div.content > ul > li:nth-child(5)::text').extract_first()
-            item['house_structure'] = response.css(
-                '#introduction > div > div > div.base > div.content > ul > li:nth-child(6)::text').extract_first()
-            item['decoration'] = response.css(
-                '#introduction > div > div > div.base > div.content > ul > li:nth-child(7)::text').extract_first()
+            if purposes == '别墅':
+                item['orientation'] = response.css(
+                    '#introduction > div > div > div.base > div.content > ul > li:nth-child(4)::text').extract_first()
+                item['house_structure'] = response.css(
+                    '#introduction > div > div > div.base > div.content > ul > li:nth-child(5)::text').extract_first()
+                item['decoration'] = response.css(
+                    '#introduction > div > div > div.base > div.content > ul > li:nth-child(6)::text').extract_first()
+            else:
+                item['orientation'] = response.css(
+                    '#introduction > div > div > div.base > div.content > ul > li:nth-child(5)::text').extract_first()
+                item['house_structure'] = response.css(
+                    '#introduction > div > div > div.base > div.content > ul > li:nth-child(6)::text').extract_first()
+                item['decoration'] = response.css(
+                    '#introduction > div > div > div.base > div.content > ul > li:nth-child(7)::text').extract_first()
         elif is_inline and is_con_type:
             item['orientation'] = response.css(
                 '#introduction > div > div > div.base > div.content > ul > li:nth-child(7)::text').extract_first()
@@ -119,13 +127,6 @@ class BkSpiderSpider(RedisSpider):
                 '#introduction > div > div > div.base > div.content > ul > li:nth-child(8)::text').extract_first()
             item['decoration'] = response.css(
                 '#introduction > div > div > div.base > div.content > ul > li:nth-child(9)::text').extract_first()
-        elif purposes.strip() == '别墅':
-            item['orientation'] = response.css(
-                '#introduction > div > div > div.base > div.content > ul > li:nth-child(4)::text').extract_first()
-            item['house_structure'] = response.css(
-                '#introduction > div > div > div.base > div.content > ul > li:nth-child(5)::text').extract_first()
-            item['decoration'] = response.css(
-                '#introduction > div > div > div.base > div.content > ul > li:nth-child(6)::text').extract_first()
         else:
             item['orientation'] = response.css(
                 '#introduction > div > div > div.base > div.content > ul > li:nth-child(6)::text').extract_first()
