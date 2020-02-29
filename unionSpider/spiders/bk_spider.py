@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import math
+import time
 
 import scrapy
 from unionSpider.items import UnionItem
@@ -14,15 +15,15 @@ class BkSpiderSpider(RedisSpider):
     redis_key = 'bk:start_urls'
     # lpush bk:start_urls 'https://cd.ke.com/ershoufang/'
     def parse(self, response):
-        # 获取该城市二手房界面的首页链接
         index = response.xpath(
             "//*[@id='beike']/div[1]/div[1]/div/ul/li[2]/a/@href").extract()[0].replace('/ershoufang/', '')
-        # 获取该城市各区县二手房界面的首页链接
         # hrefs = response.xpath("//*[@class=' CLICKDATA']/@href").extract()
         # for href in hrefs:
-        #     # 构造该城市各区县二手房信息列表的链接
         #     url = '%s%s' % (index, href)
-        #     yield scrapy.Request(url, callback=self.parse_url,meta={'url':url}, dont_filter=True)
+        #     yield scrapy.Request(url, callback=self.parse_url,meta={'url':url})
+
+        # 以下要分各个街道爬取
+        #------
         # url = 'https://cd.ke.com/ershoufang/jinjiang/' finished
         # url = 'https://cd.ke.com/ershoufang/qingyang/'
         # url = 'https://cd.ke.com/ershoufang/wuhou/'
@@ -30,14 +31,17 @@ class BkSpiderSpider(RedisSpider):
         # url = 'https://cd.ke.com/ershoufang/chenghua/'
         # url = 'https://cd.ke.com/ershoufang/jinniu/'
         # url = 'https://cd.ke.com/ershoufang/tianfuxinqu/'
-        # url = 'https://cd.ke.com/ershoufang/gaoxinxi1/'
         # url = 'https://cd.ke.com/ershoufang/shuangliu/'
         # url = 'https://cd.ke.com/ershoufang/wenjiang/'
         # url = 'https://cd.ke.com/ershoufang/pidu/'
         # url = 'https://cd.ke.com/ershoufang/longquanyi/'
-        # url = 'https://cd.ke.com/ershoufang/xindu/'
-        # url = 'https://cd.ke.com/ershoufang/tianfuxinqunanqu/'
-        url = 'https://cd.ke.com/ershoufang/qingbaijiang/'
+        # ------
+
+
+        # url = 'https://cd.ke.com/ershoufang/gaoxinxi1/'
+        url = 'https://cd.ke.com/ershoufang/xindou/'
+        # url = 'https://cd.ke.com/ershoufang/tianfuxinqunanqu/' finished
+        # url = 'https://cd.ke.com/ershoufang/qingbaijiang/' finished
         # url = 'https://cd.ke.com/ershoufang/dujiangyan/' finished
         # url = 'https://cd.ke.com/ershoufang/jianyang/' finished
         # url = 'https://cd.ke.com/ershoufang/pengzhou/' finished
@@ -128,12 +132,20 @@ class BkSpiderSpider(RedisSpider):
             item['decoration'] = response.css(
                 '#introduction > div > div > div.base > div.content > ul > li:nth-child(9)::text').extract_first()
         else:
-            item['orientation'] = response.css(
-                '#introduction > div > div > div.base > div.content > ul > li:nth-child(6)::text').extract_first()
-            item['house_structure'] = response.css(
-                '#introduction > div > div > div.base > div.content > ul > li:nth-child(7)::text').extract_first()
-            item['decoration'] = response.css(
-                '#introduction > div > div > div.base > div.content > ul > li:nth-child(8)::text').extract_first()
+            if purposes == '别墅':
+                item['orientation'] = response.css(
+                    '#introduction > div > div > div.base > div.content > ul > li:nth-child(5)::text').extract_first()
+                item['house_structure'] = response.css(
+                    '#introduction > div > div > div.base > div.content > ul > li:nth-child(6)::text').extract_first()
+                item['decoration'] = response.css(
+                    '#introduction > div > div > div.base > div.content > ul > li:nth-child(7)::text').extract_first()
+            else:
+                item['orientation'] = response.css(
+                    '#introduction > div > div > div.base > div.content > ul > li:nth-child(6)::text').extract_first()
+                item['house_structure'] = response.css(
+                    '#introduction > div > div > div.base > div.content > ul > li:nth-child(7)::text').extract_first()
+                item['decoration'] = response.css(
+                    '#introduction > div > div > div.base > div.content > ul > li:nth-child(8)::text').extract_first()
 
         item['floor'] = response.css(
             '#introduction > div > div > div.base > div.content > ul > li:nth-child(2)::text').extract_first()
@@ -151,9 +163,22 @@ class BkSpiderSpider(RedisSpider):
         release_date = response.css(
             '#introduction > div > div > div.transaction > div.content > ul > li:nth-child(1)::text').extract_first()
         release_date = re.sub(r'\n','',release_date)
-        item['release_date'] = release_date.strip()
+        rtime = release_date.strip()
+        final_time = self.parsetime(rtime)
+        item['release_date'] = final_time
         item['image_urls'] = response.css(
             '#thumbnail2 > ul > li > img::attr(src)').extract()
         item['from_url'] = response.url
         yield item
+
+    def parsetime(self,rtime):
+        """
+        parse 2018年1月10日 to 2018-1-10
+        """
+        tmp_time = time.strptime(rtime, '%Y年%m月%d日')
+        year = str(tmp_time.tm_year)
+        month = str(tmp_time.tm_mon)
+        day = str(tmp_time.tm_mday)
+        final_time = year + '-' + month + '-' + day
+        return final_time
 
