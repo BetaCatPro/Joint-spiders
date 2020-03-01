@@ -8,50 +8,45 @@ from unionSpider.items import UnionItem
 from scrapy_redis.spiders import RedisSpider
 
 class BkSpiderSpider(RedisSpider):
-# class BkSpiderSpider(scrapy.Spider):
-    name = 'bk'
+    name = 'ke'
     allowed_domains = ['ke.com']
-    # start_urls = ['https://cd.ke.com/ershoufang/']
-    redis_key = 'bk:start_urls'
-    # lpush bk:start_urls 'https://cd.ke.com/ershoufang/'
+    redis_key = 'ke:start_urls'
     def parse(self, response):
-        index = response.xpath(
-            "//*[@id='beike']/div[1]/div[1]/div/ul/li[2]/a/@href").extract()[0].replace('/ershoufang/', '')
+        # 这里是单进程默模式
+        # 解析各区县url
+        # index = response.xpath(
+        #     "//*[@id='beike']/div[1]/div[1]/div/ul/li[2]/a/@href").extract()[0].replace('/ershoufang/', '')
         # hrefs = response.xpath("//*[@class=' CLICKDATA']/@href").extract()
         # for href in hrefs:
         #     url = '%s%s' % (index, href)
-        #     yield scrapy.Request(url, callback=self.parse_url,meta={'url':url})
-
-        # 以下要分各个街道爬取
-        #------
-        # url = 'https://cd.ke.com/ershoufang/jinjiang/' finished
-        # url = 'https://cd.ke.com/ershoufang/qingyang/'
-        # url = 'https://cd.ke.com/ershoufang/wuhou/'
-        # url = 'https://cd.ke.com/ershoufang/gaoxin7/'
-        # url = 'https://cd.ke.com/ershoufang/chenghua/'
-        # url = 'https://cd.ke.com/ershoufang/jinniu/'
-        # url = 'https://cd.ke.com/ershoufang/tianfuxinqu/'
-        # url = 'https://cd.ke.com/ershoufang/shuangliu/'
-        # url = 'https://cd.ke.com/ershoufang/wenjiang/'
-        # url = 'https://cd.ke.com/ershoufang/pidu/'
-        # url = 'https://cd.ke.com/ershoufang/longquanyi/'
-        # ------
+        #     yield scrapy.Request(url, callback=self.parse_site)
 
 
-        url = 'https://cd.ke.com/ershoufang/gaoxinxi1/'
-        # url = 'https://cd.ke.com/ershoufang/xindou/' finished
-        # url = 'https://cd.ke.com/ershoufang/tianfuxinqunanqu/' finished
-        # url = 'https://cd.ke.com/ershoufang/qingbaijiang/' finished
-        # url = 'https://cd.ke.com/ershoufang/dujiangyan/' finished
-        # url = 'https://cd.ke.com/ershoufang/jianyang/' finished
-        # url = 'https://cd.ke.com/ershoufang/pengzhou/' finished
-        # url = 'https://cd.ke.com/ershoufang/xinjin/' finished
-        # url = 'https://cd.ke.com/ershoufang/chongzhou1/' finished
-        # url = 'https://cd.ke.com/ershoufang/dayi/' finished
-        # url = 'https://cd.ke.com/ershoufang/jintang/' finished
-        # url = 'https://cd.ke.com/ershoufang/pujiang/' fininshed
-        # url = 'https://cd.ke.com/ershoufang/qionglai/' fininshed
-        yield scrapy.Request(url, callback=self.parse_url,meta={'url':url})
+        # 这里通过分布式进行都页面同时爬取
+        # server1: lpush ke:start_urls 'https://cd.ke.com/ershoufang/qingyang/' finished
+        # server2: lpush ke:start_urls 'https://cd.ke.com/ershoufang/wuhou/'
+        # server3: lpush ke:start_urls 'https://cd.ke.com/ershoufang/gaoxin7/'
+        # server4: lpush ke:start_urls 'https://cd.ke.com/ershoufang/chenghua/'
+        # server5: lpush ke:start_urls 'https://cd.ke.com/ershoufang/jinniu/'
+        # server6: lpush ke:start_urls 'https://cd.ke.com/ershoufang/tianfuxinqu/'
+        # server7: lpush ke:start_urls 'https://cd.ke.com/ershoufang/shuangliu/'
+        # server8: lpush ke:start_urls 'https://cd.ke.com/ershoufang/wenjiang/'
+        # server9: lpush ke:start_urls 'https://cd.ke.com/ershoufang/pidu/'
+        # server0: lpush ke:start_urls 'https://cd.ke.com/ershoufang/longquanyi/' finished
+        # ......
+        url = response.url
+        yield scrapy.Request(url, callback=self.parse_site)
+
+
+    def parse_site(self,response):
+        # 解析所有街道url
+        streets = response.xpath("//*[@class='position']/dl[2]/dd/div[1]/div[2]/a/@href").getall()
+        index = response.xpath(
+                "//*[@id='beike']/div[1]/div[1]/div/ul/li[2]/a/@href").extract()[0].replace('/ershoufang/', '')
+        for url in streets:
+            url = '%s%s' % (index, url)
+            yield scrapy.Request(url, callback=self.parse_url,meta={'url':url})
+
 
     def parse_url(self, response):
         # 分页爬取
@@ -94,12 +89,9 @@ class BkSpiderSpider(RedisSpider):
             '#introduction > div > div > div.transaction > div.content > ul > li:nth-child(4)::text').extract_first()
         purposes = re.sub(r'\n', '', purposes).strip()
         item['purposes'] = purposes.strip()
-        # error
         is_inline = False
         is_con_type = False
-        # 套内面积
         inline_area = response.css('#introduction > div > div > div.base > div.content > ul > li:nth-child(5) > span::text').extract_first()
-        # 建筑类型
         if inline_area == '套内面积':
             is_inline = True
             if response.css('#introduction > div > div > div.base > div.content > ul > li:nth-child(6) > span::text').extract_first() == '建筑类型':
@@ -162,9 +154,8 @@ class BkSpiderSpider(RedisSpider):
             item['elevator'] = '无'
         release_date = response.css(
             '#introduction > div > div > div.transaction > div.content > ul > li:nth-child(1)::text').extract_first()
-        release_date = re.sub(r'\n','',release_date)
-        rtime = release_date.strip()
-        final_time = self.parsetime(rtime)
+        release_date = re.sub(r'\n','',release_date).strip()
+        final_time = self.parsetime(release_date)
         item['release_date'] = final_time
         item['image_urls'] = response.css(
             '#thumbnail2 > ul > li > img::attr(src)').extract()
@@ -181,4 +172,3 @@ class BkSpiderSpider(RedisSpider):
         day = str(tmp_time.tm_mday)
         final_time = year + '-' + month + '-' + day
         return final_time
-

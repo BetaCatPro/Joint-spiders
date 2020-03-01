@@ -15,8 +15,8 @@ class CSVPipeline(object):
     file = None
 
     def open_spider(self, spider):
-        # self.file = open("E:\\毕设\\DataAnalysis\\data\\tianfuxinqunanqu_house.csv", "a" ,encoding='utf-8',newline='')
-        self.file = open("E:\\Graduation Project\\DataAnalysis\\data\\xindu_house.csv", "a",newline='')
+        # encoding='utf-8
+        self.file = open("E:\\Graduation Project\\DataAnalysis\\data\\longquanyi_house.csv", "a",newline='')
 
     def process_item(self, item, spider):
         if self.index == 0:
@@ -33,7 +33,7 @@ class CSVPipeline(object):
     def close_spider(self, spider):
         self.file.close()
 
-class TestPipeline(object):
+class MultiPipeline(object):
     file = None
 
     def open_spider(self, spider):
