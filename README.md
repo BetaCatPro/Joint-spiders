@@ -1,4 +1,4 @@
-# Joint-spider
+﻿# Joint-spider
 
 
 <p align="center"><img src="https://scrapy.org/img/scrapylogo.png"></p>
@@ -11,8 +11,9 @@
 
 
 Scrapy-Redis 架构：
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200426160009668.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2J5NjY3MTcxNQ==,size_16,color_FFFFFF,t_70#pic_center)
 
-![](imgs/scrapy-redis架构图.jpg)
+
 
 
 > 成都贝壳，安居客房源信息爬虫
@@ -84,14 +85,15 @@ Scrapy-Redis 架构：
 
 
 ### 一 .  系统功能架构
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200426155150631.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2J5NjY3MTcxNQ==,size_16,color_FFFFFF,t_70)
 
-![](imgs/功能架构.png)
 
 ### 二. 系统分布架构
 
 分布式采用主从结构设置一个Master服务器和多个Worker服务器，Master端管理Redis数据库和分发下载任务，Woker部署Scrapy爬虫提取网页和解析提取数据，最后将解析的数据存储在Mysql数据库中或保存为本地CSV文件。分布式爬虫架构如图所示。
 
-![](imgs/分布式.png)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200426155215108.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2J5NjY3MTcxNQ==,size_16,color_FFFFFF,t_70)
+
 
 ​	应用`Redis`数据库实现分布式抓取，基本思想是`Scrapy`爬虫获取的到的房源详情页的urls都放到`Redis Queue`中，所有爬虫也都从指定的`Redis Queue中`获取urls，`Scrapy-Redis`组件中默认使用`SpiderPriorityQueue`来确定url的先后次序，这是由sorted set实现的一种非FIFO、LIFO方式。因此，待爬队列的共享是爬虫可以部署在其他服务器上完成同一个爬取任务的一个关键点。此外，为了解决Scrapy单机局限的问题，`Scrapy`结合`Scrapy-Redis`进行开发，`Scrapy-Redis`总体思路就是这个工程通过重写`Scrapy`框架中的`scheduler`和`spider`类，实现了调度、`spider`启动和`redis`的交互。实现新的`dupefilter`和`queue`类，达到了判重和调度容器和`redis`的交互，因为每个主机上的爬虫进程都访问同一个redis数据库，所以调度和判重都统一进行统一管理，达到了分布式爬虫的目的。
 
@@ -111,10 +113,7 @@ Scrapy-Redis 架构：
 4. 房源详情页链接,既`https://cd.ke.com/ershoufang/106104159569.html?fb_expo_id=306121790391377920`指向的就是实际的房源信息页面。
 
 网络需从首页链接进入，提取到所有区划页链接，解析出所有房源详情页链接,加入到待下载队列准备进一步爬取。流程如下:
-
-
-
-![](imgs/爬取策略.png)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200426155434485.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2J5NjY3MTcxNQ==,size_16,color_FFFFFF,t_70)
 
 在Worker端中，直接进行目标数据解析,主要抓取数据有:
 
@@ -149,7 +148,8 @@ Scrapy-Redis 架构：
 
 Master端：
 
-<img src="imgs/region.png" style="zoom:60%;" />
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200426155332587.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2J5NjY3MTcxNQ==,size_16,color_FFFFFF,t_70)
+
 
 ```python
 # 解析各区县url
@@ -169,8 +169,7 @@ for href in hrefs:
 
 然后进行街道等地址url解析:
 
-<img src="imgs/street.png" />
-
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200426155505567.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2J5NjY3MTcxNQ==,size_16,color_FFFFFF,t_70)
 ```python
 # 解析所有街道url
 # 例/ershoufang/chuanshi/
@@ -188,8 +187,7 @@ for url in streets:
 解析成功街道url后，进入到页面，例如：https://cd.ke.com/ershoufang/chuanshi/
 
 然后进行分页爬取：
-
-![](imgs/total.png)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200426155527280.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2J5NjY3MTcxNQ==,size_16,color_FFFFFF,t_70)
 
 ```python
 # 分页爬取
@@ -206,8 +204,8 @@ for i in range(page_num):
 ```
 
 Worker端最后的工作：解析house_detail urls
+![在这里插入图片描述](https://img-blog.csdnimg.cn/2020042615554440.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2J5NjY3MTcxNQ==,size_16,color_FFFFFF,t_70)
 
-![](imgs/house-list.png)
 
 ```python
 for info in response.xpath("//*[@class='info clear']"):
@@ -292,7 +290,9 @@ a) 与模拟不同的浏览器行为
 
 ​	原理图：
 
-![](imgs/user-agent.png)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200426155759456.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2J5NjY3MTcxNQ==,size_16,color_FFFFFF,t_70#pic_center)
+
+
 
 在mildeware.py文件中增加一个下载中间件UserAgentDownLoadMildeware
 
@@ -332,8 +332,9 @@ DOWNLOADER_MIDDLEWARES = {
 b) 以一定的频率更换代理服务器和网关
 
 代理ip池的设计与开发流程如下:
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200426155733646.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2J5NjY3MTcxNQ==,size_16,color_FFFFFF,t_70#pic_center)
 
-![](imgs/proxy.png)
+
 
 IP池抓取代码在`\unionSpider\bk_spider\bk_slave\bk_slave\utils\proxies.py`中
 
@@ -503,9 +504,10 @@ ITEM_PIPELINES = {
 ### 四. 结果展示
 
 Mysql数据库中：
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200426155920148.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2J5NjY3MTcxNQ==,size_16,color_FFFFFF,t_70#pic_center)
 
-![](imgs/mysql-result.png)
 
 CSV文件中：
 
-![](imgs/CSV-mysql.png)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200426155928198.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2J5NjY3MTcxNQ==,size_16,color_FFFFFF,t_70#pic_center)
+
